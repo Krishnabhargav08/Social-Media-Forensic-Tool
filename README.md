@@ -1,6 +1,6 @@
 # Social Media Forensic Tool
 
-## 🔒 BTech Major Project
+## 🔒 Description
 
 A secure forensic investigation web application for verified law enforcement officials to collect, analyze, and preserve digital evidence from social media platforms.
 
