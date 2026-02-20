@@ -190,31 +190,7 @@ python app.py
 
 ---
 
-## 🔑 Default Admin Account
-
-After first run, you need to create an admin account directly in MongoDB:
-
-```javascript
-// Connect to MongoDB
-use forensic_tool
-
-// Create admin user
-db.users.insertOne({
-  email: "admin@forensictool.com",
-  password: "$2b$12$yourHashedPasswordHere", // Use bcrypt to hash
-  full_name: "System Administrator",
-  badge_number: "ADMIN-001",
-  department: "System Administration",
-  role: "admin",
-  status: "approved",
-  login_attempts: 0,
-  account_locked: false,
-  created_at: new Date(),
-  updated_at: new Date()
-})
-```
-
-Or register normally and update role manually in MongoDB.
+register normally and update role manually in MongoDB.
 
 ---
 
