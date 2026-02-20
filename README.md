@@ -421,7 +421,7 @@ Educational use only. Not for commercial distribution.
 
 ## 👨‍💻 Author
 
-**BTech Student**  
+**Krishna Bhargav**  
 Social Media Forensic Tool - Major Project
 
 ---
@@ -433,15 +433,6 @@ Social Media Forensic Tool - Major Project
 - MongoDB for database
 - Flask & React communities
 
----
-
-## 📞 Support
-
-For issues or questions:
-- Check documentation
-- Review code comments
-- Test with sample data
-- Verify dependencies
 
 ---
 
