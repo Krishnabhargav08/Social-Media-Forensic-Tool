@@ -67,21 +67,84 @@ const CaseDetails = () => {
 
   const handleGenerateReport = async (e) => {
     e.preventDefault()
+    
+    if (!reportPassword) {
+      alert('Please enter an encryption password')
+      return
+    }
+    
     setGeneratingReport(true)
     
     try {
+      const token = localStorage.getItem('token')
+      
+      console.log('Generating report with token:', token ? 'Token exists' : 'No token')
+      
+      if (!token) {
+        alert('Session expired. Please login again.')
+        navigate('/login')
+        return
+      }
+      
+      console.log('Sending request to /api/reports/generate')
+      
       const response = await axios.post('/api/reports/generate', {
         case_id: caseId,
         encryption_password: reportPassword
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
       
-      setReportId(response.data.report_id)
-      alert('Report generated successfully! Use the same password to download.')
+      console.log('Report generated successfully:', response.data)
+      
+      const generatedReportId = response.data.report_id
+      setReportId(generatedReportId)
+      
+      // Automatically download the report
+      console.log('Downloading report:', generatedReportId)
+      
+      const downloadResponse = await axios.post(
+        `/api/reports/${generatedReportId}/download`,
+        { decryption_password: reportPassword },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          responseType: 'blob' // Important for file download
+        }
+      )
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([downloadResponse.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `forensic_report_${caseId}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      
+      alert('Report generated and downloaded successfully!')
       setShowReportModal(false)
       setReportPassword('')
+      
+      // Refresh case data to update UI
+      fetchCaseDetails()
+      
     } catch (error) {
       console.error('Report generation failed:', error)
-      alert('Failed to generate report: ' + (error.response?.data?.error || 'Unknown error'))
+      console.error('Error response:', error.response)
+      
+      if (error.response?.status === 401) {
+        alert('Session expired. Please logout and login again.')
+        localStorage.removeItem('token')
+        navigate('/login')
+      } else {
+        const errorMsg = error.response?.data?.error || error.message || 'Unknown error'
+        alert('Failed to generate report: ' + errorMsg)
+      }
     } finally {
       setGeneratingReport(false)
     }
@@ -361,6 +424,116 @@ const CaseDetails = () => {
             )}
           </div>
         </div>
+
+        {/* Collected Evidence Section */}
+        {hasData && (
+          <div className="mt-6">
+            <Card>
+              <h2 className="text-2xl font-bold text-cyber-green mb-6 flex items-center gap-2">
+                <FiFileText size={24} />
+                Collected Evidence
+              </h2>
+              
+              {caseData.data_collected.map((dataEntry, index) => (
+                <div key={index} className="mb-8 last:mb-0">
+                  {/* Profile Information */}
+                  {dataEntry.profile && (
+                    <div className="bg-cyber-dark rounded-lg p-4 mb-4">
+                      <h3 className="text-lg font-bold text-cyber-blue mb-3">Profile Information</h3>
+                      <div className="grid md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-400">Username:</span>
+                          <span className="text-white ml-2">{dataEntry.username}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Display Name:</span>
+                          <span className="text-white ml-2">{dataEntry.profile.display_name}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Location:</span>
+                          <span className="text-white ml-2">{dataEntry.profile.location}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Verified:</span>
+                          <span className={`ml-2 ${dataEntry.profile.verified ? 'text-cyber-green' : 'text-gray-400'}`}>
+                            {dataEntry.profile.verified ? '✓ Yes' : '✗ No'}
+                          </span>
+                        </div>
+                        <div className="md:col-span-2">
+                          <span className="text-gray-400">Bio:</span>
+                          <span className="text-white ml-2">{dataEntry.profile.bio}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Metadata */}
+                  {dataEntry.metadata && (
+                    <div className="bg-cyber-dark rounded-lg p-4 mb-4">
+                      <h3 className="text-lg font-bold text-cyber-blue mb-3">Account Metrics</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="text-center">
+                          <p className="text-gray-400 text-xs">Total Posts</p>
+                          <p className="text-2xl font-bold text-cyber-green">{dataEntry.metadata.total_posts}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-gray-400 text-xs">Followers</p>
+                          <p className="text-2xl font-bold text-cyber-blue">{dataEntry.metadata.followers}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-gray-400 text-xs">Following</p>
+                          <p className="text-2xl font-bold text-purple-400">{dataEntry.metadata.following}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-gray-400 text-xs">Account Age</p>
+                          <p className="text-2xl font-bold text-white">{dataEntry.metadata.account_age_days} days</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Posts */}
+                  {dataEntry.posts && dataEntry.posts.length > 0 && (
+                    <div className="bg-cyber-dark rounded-lg p-4">
+                      <h3 className="text-lg font-bold text-cyber-blue mb-3">
+                        Collected Posts ({dataEntry.posts.length})
+                      </h3>
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {dataEntry.posts.map((post, postIndex) => (
+                          <div 
+                            key={postIndex} 
+                            className="bg-cyber-darker rounded p-3 border border-cyber-blue border-opacity-20 hover:border-opacity-50 transition-all"
+                          >
+                            <p className="text-white mb-2">{post.content}</p>
+                            <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+                              <span>👍 {post.likes} likes</span>
+                              <span>💬 {post.comments} comments</span>
+                              <span>🔄 {post.shares} shares</span>
+                              <span>📅 {new Date(post.timestamp).toLocaleDateString()}</span>
+                            </div>
+                            {post.hashtags && post.hashtags.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {post.hashtags.map((tag, tagIndex) => (
+                                  <span key={tagIndex} className="text-xs text-cyber-blue">
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-4 text-xs text-gray-500">
+                    Scraped at: {new Date(dataEntry.scraped_at).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </Card>
+          </div>
+        )}
       </div>
 
       {/* Report Generation Modal */}

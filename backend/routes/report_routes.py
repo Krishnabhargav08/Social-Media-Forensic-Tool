@@ -17,7 +17,7 @@ report_bp = Blueprint('report', __name__)
 @report_bp.route('/generate', methods=['POST'])
 @investigator_required
 @validate_request('case_id', 'encryption_password')
-def generate_report(case_id):
+def generate_report():
     """Generate encrypted forensic PDF report"""
     try:
         data = request.get_json()
@@ -29,13 +29,14 @@ def generate_report(case_id):
         if not case:
             return jsonify({'error': 'Case not found'}), 404
         
-        # Verify ownership
-        if case['investigator_id'] != request.current_user['_id']:
-            return jsonify({'error': 'Unauthorized access'}), 403
+        # Verify ownership (unless admin)
+        if request.current_user['role'] != 'admin':
+            if case['investigator_id'] != request.current_user['_id']:
+                return jsonify({'error': 'Unauthorized access'}), 403
         
-        # Check if analysis is done
-        if not case.get('analysis_results'):
-            return jsonify({'error': 'Case analysis not completed'}), 400
+        # Check if data is collected
+        if not case.get('data_collected'):
+            return jsonify({'error': 'No data collected yet. Please scrape data first.'}), 400
         
         # Generate report
         report_service = ReportService()
@@ -65,6 +66,7 @@ def generate_report(case_id):
         }), 201
         
     except Exception as e:
+        print(f"Report generation error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @report_bp.route('/<report_id>/download', methods=['POST'])

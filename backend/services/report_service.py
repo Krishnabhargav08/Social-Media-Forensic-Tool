@@ -214,8 +214,8 @@ class ReportService:
             for page in pdf_reader.pages:
                 pdf_writer.add_page(page)
             
-            # Encrypt with password
-            pdf_writer.encrypt(user_password=password, owner_password=password, algorithm="AES-256")
+            # Encrypt with password (uses AES-256 by default in PyPDF2)
+            pdf_writer.encrypt(user_password=password, owner_password=password)
             
             # Write encrypted PDF
             with open(output_path, 'wb') as output_file:

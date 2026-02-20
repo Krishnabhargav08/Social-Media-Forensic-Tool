@@ -138,3 +138,9 @@ class Case:
         for case in cases:
             case['_id'] = str(case['_id'])
         return cases
+    
+    @staticmethod
+    def delete(case_id):
+        """Delete a case"""
+        collection = db.get_collection(Case.COLLECTION)
+        collection.delete_one({'_id': ObjectId(case_id)})

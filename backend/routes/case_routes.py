@@ -217,3 +217,36 @@ def complete_case(case_id):
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@case_bp.route('/<case_id>', methods=['DELETE'])
+@investigator_required
+def delete_case(case_id):
+    """Delete a case"""
+    try:
+        case = Case.find_by_id(case_id)
+        
+        if not case:
+            return jsonify({'error': 'Case not found'}), 404
+        
+        # Verify ownership (only case owner or admin can delete)
+        if request.current_user['role'] != 'admin':
+            if case['investigator_id'] != request.current_user['_id']:
+                return jsonify({'error': 'Unauthorized access'}), 403
+        
+        # Delete the case
+        Case.delete(case_id)
+        
+        # Log action
+        AuditLog.log(
+            user_id=request.current_user['_id'],
+            action='DELETE_CASE',
+            details={'case_id': case_id, 'target_username': case['target_username']},
+            ip_address=request.remote_addr
+        )
+        
+        return jsonify({
+            'message': 'Case deleted successfully'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

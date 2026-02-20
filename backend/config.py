@@ -18,7 +18,7 @@ class Config:
     
     # JWT settings
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=8)  # Increased for development
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
     
     # MongoDB settings
@@ -28,6 +28,28 @@ class Config:
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'uploads')
     REPORT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'reports')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    
+    # Social Media API Keys (Optional - falls back to simulated mode if not set)
+    TWITTER_API_KEY = os.getenv('TWITTER_API_KEY', None)
+    TWITTER_API_SECRET = os.getenv('TWITTER_API_SECRET', None)
+    TWITTER_ACCESS_TOKEN = os.getenv('TWITTER_ACCESS_TOKEN', None)
+    TWITTER_ACCESS_SECRET = os.getenv('TWITTER_ACCESS_SECRET', None)
+    TWITTER_BEARER_TOKEN = os.getenv('TWITTER_BEARER_TOKEN', None)
+    
+    INSTAGRAM_ACCESS_TOKEN = os.getenv('INSTAGRAM_ACCESS_TOKEN', None)
+    INSTAGRAM_CLIENT_ID = os.getenv('INSTAGRAM_CLIENT_ID', None)
+    INSTAGRAM_CLIENT_SECRET = os.getenv('INSTAGRAM_CLIENT_SECRET', None)
+    
+    REDDIT_CLIENT_ID = os.getenv('REDDIT_CLIENT_ID', None)
+    REDDIT_CLIENT_SECRET = os.getenv('REDDIT_CLIENT_SECRET', None)
+    REDDIT_USER_AGENT = os.getenv('REDDIT_USER_AGENT', 'ForensicTool/1.0')
+    
+    # AI Analysis API Keys (Optional - falls back to basic analysis if not set)
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', None)
+    USE_ADVANCED_AI = os.getenv('USE_ADVANCED_AI', 'False') == 'True'
+    
+    # Feature Flags
+    USE_REAL_SCRAPING = os.getenv('USE_REAL_SCRAPING', 'False') == 'True'
     
     # Security settings
     BCRYPT_LOG_ROUNDS = 12

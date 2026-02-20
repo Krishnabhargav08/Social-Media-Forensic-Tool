@@ -1,6 +1,7 @@
 """
 Analysis Service
 Performs sentiment analysis, cyberbullying detection, and fake profile detection
+Supports both basic TextBlob analysis and advanced AI analysis
 """
 
 import re
@@ -25,6 +26,9 @@ class AnalysisService:
             'limited time', 'you won', 'claim your prize', 'verify account',
             'urgent action', 'suspended account', 'confirm identity'
         ]
+        
+        # Advanced AI service (optional)
+        self.advanced_ai = None
     
     def analyze_all(self, data_collected):
         """Perform comprehensive analysis on collected data"""
@@ -43,11 +47,40 @@ class AnalysisService:
         posts = latest_data.get('posts', [])
         metadata = latest_data.get('metadata', {})
         
-        # Perform all analyses
+        # Try advanced AI analysis first
+        advanced_analysis = self._try_advanced_ai_analysis(posts)
+        
+        # Perform traditional analyses
         sentiment_results = self.analyze_sentiment(posts)
         cyberbullying_results = self.detect_cyberbullying(posts)
         fraud_results = self.detect_fraud_patterns(posts)
         fake_profile_results = self.detect_fake_profile(metadata, posts)
+        
+        # Merge advanced AI results if available
+        if advanced_analysis:
+            sentiment_results['ai_enhanced'] = True
+            sentiment_results['advanced_analysis'] = advanced_analysis
+            
+            # Enhance scores with AI insights if available
+            if 'gpt4_analysis' in advanced_analysis and isinstance(advanced_analysis['gpt4_analysis'], dict):
+                gpt4 = advanced_analysis['gpt4_analysis']
+                if 'cyberbullying_score' in gpt4:
+                    cyberbullying_results['ai_score'] = gpt4['cyberbullying_score']
+                if 'fraud_score' in gpt4:
+                    fraud_results['ai_score'] = gpt4['fraud_score']
+    
+    def _try_advanced_ai_analysis(self, posts):
+        """Try to use advanced AI analysis if available"""
+        try:
+            # Lazy load advanced AI service
+            if self.advanced_ai is None:
+                from services.advanced_ai_service import AdvancedAIService
+                self.advanced_ai = AdvancedAIService()
+            
+            return self.advanced_ai.get_comprehensive_analysis(posts)
+        except Exception as e:
+            print(f"ℹ️  Advanced AI not available: {e}")
+            return None
         
         # Calculate overall risk score (0-100)
         risk_score = self._calculate_risk_score(

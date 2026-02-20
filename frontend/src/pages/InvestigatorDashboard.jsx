@@ -6,7 +6,7 @@ import StatCard from '../components/StatCard'
 import Card from '../components/Card'
 import Button from '../components/Button'
 import Input from '../components/Input'
-import { FiFolder, FiPlus, FiSearch, FiClock, FiCheck } from 'react-icons/fi'
+import { FiFolder, FiPlus, FiSearch, FiClock, FiCheck, FiTrash2 } from 'react-icons/fi'
 
 const InvestigatorDashboard = () => {
   const [cases, setCases] = useState([])
@@ -46,6 +46,23 @@ const InvestigatorDashboard = () => {
     } catch (error) {
       console.error('Failed to create case:', error)
       alert('Failed to create case: ' + (error.response?.data?.error || 'Unknown error'))
+    }
+  }
+
+  const handleDeleteCase = async (caseId, targetUsername, e) => {
+    e.stopPropagation() // Prevent navigation when clicking delete
+    
+    if (!window.confirm(`Are you sure you want to delete the case for @${targetUsername}? This action cannot be undone.`)) {
+      return
+    }
+    
+    try {
+      await axios.delete(`/api/cases/${caseId}`)
+      alert('Case deleted successfully!')
+      fetchCases()
+    } catch (error) {
+      console.error('Failed to delete case:', error)
+      alert('Failed to delete case: ' + (error.response?.data?.error || 'Unknown error'))
     }
   }
 
@@ -139,26 +156,29 @@ const InvestigatorDashboard = () => {
               {cases.map((caseItem) => (
                 <div
                   key={caseItem._id}
-                  onClick={() => navigate(`/case/${caseItem._id}`)}
-                  className="bg-cyber-dark rounded-lg p-4 border-2 border-cyber-blue border-opacity-20 hover:border-opacity-100 cursor-pointer transition-all card-hover"
+                  className="bg-cyber-dark rounded-lg p-4 border-2 border-cyber-blue border-opacity-20 hover:border-opacity-100 transition-all card-hover relative"
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white mb-1">
-                        {caseItem.target_username}
-                      </h3>
-                      <p className="text-sm text-gray-400 capitalize">{caseItem.platform}</p>
+                  <div 
+                    onClick={() => navigate(`/case/${caseItem._id}`)}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex justify-between items-start mb-3 pr-8">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-white mb-1">
+                          {caseItem.target_username}
+                        </h3>
+                        <p className="text-sm text-gray-400 capitalize">{caseItem.platform}</p>
+                      </div>
+                      
+                      <span className={`
+                        px-2 py-1 rounded text-xs font-bold
+                        ${caseItem.status === 'active' 
+                          ? 'bg-purple-500 bg-opacity-20 text-purple-400' 
+                          : 'bg-green-500 bg-opacity-20 text-green-400'}
+                      `}>
+                        {caseItem.status}
+                      </span>
                     </div>
-                    
-                    <span className={`
-                      px-2 py-1 rounded text-xs font-bold
-                      ${caseItem.status === 'active' 
-                        ? 'bg-purple-500 bg-opacity-20 text-purple-400' 
-                        : 'bg-green-500 bg-opacity-20 text-green-400'}
-                    `}>
-                      {caseItem.status}
-                    </span>
-                  </div>
 
                   {caseItem.risk_score > 0 && (
                     <div className="mb-3">
@@ -190,6 +210,15 @@ const InvestigatorDashboard = () => {
                   <div className="text-xs text-gray-500">
                     Created: {new Date(caseItem.created_at).toLocaleDateString()}
                   </div>
+                  </div>
+                  
+                  <button
+                    onClick={(e) => handleDeleteCase(caseItem._id, caseItem.target_username, e)}
+                    className="absolute top-4 right-4 p-2 text-red-500 hover:text-red-400 hover:bg-red-500 hover:bg-opacity-10 rounded-lg transition-all z-10"
+                    title="Delete case"
+                  >
+                    <FiTrash2 size={18} />
+                  </button>
                 </div>
               ))}
             </div>
@@ -228,6 +257,7 @@ const InvestigatorDashboard = () => {
                   <option value="instagram">Instagram</option>
                   <option value="facebook">Facebook</option>
                   <option value="linkedin">LinkedIn</option>
+                  <option value="reddit">Reddit</option>
                 </select>
               </div>
 
