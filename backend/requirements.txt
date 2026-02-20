@@ -1,0 +1,21 @@
+# Flask Backend Dependencies
+flask==3.0.0
+flask-cors==4.0.0
+flask-jwt-extended==4.6.0
+pymongo==4.6.1
+bcrypt==4.1.2
+python-dotenv==1.0.0
+
+# PDF Generation
+reportlab==4.0.9
+PyPDF2==3.0.1
+
+# Text Analysis
+textblob==0.17.1
+nltk==3.8.1
+
+# Email
+secure-smtplib==0.1.1
+
+# Utilities
+python-dateutil==2.8.2
